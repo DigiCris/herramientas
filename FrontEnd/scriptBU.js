@@ -43,16 +43,16 @@ de ese div que generó con el simple hecho de que podamos saber que estamos clic
 */
 async function init(){
     // ID donde guardarlo,          ID para llamarlo, funcion,                   arg1,              arg2
-    await generarDiv("button1","button1","cargarContenidoDesdeURL", "./components/button1.html");
+    await generarDiv("components","button1","cargarContenidoDesdeURL", "./components/button1.html", "content");
     await cargarContenidoDesdeURL('./components/button1.html','button1'+i);    
 
-    await generarDiv("button2","button2","cargarContenidoDesdeURL", "./components/button2.html");
-    await cargarContenidoDesdeURL('./components/button2.html','button2'+i);   
+    await generarDiv("components","button2","cargarContenidoDesdeURL", "./components/button2.html", "content");
+    await cargarContenidoDesdeURL('./components/button2.html','button2'+i);    
 
-    await generarDiv("button3","button3","cargarContenidoDesdeURL", "./components/button3.html");
+    await generarDiv("components","button3","cargarContenidoDesdeURL", "./components/button3.html", "content");
     await cargarContenidoDesdeURL('./components/button3.html','button3'+i);   
-
-    await generarDiv("layout","fila","cargarContenidoDesdeURL", "./components/fila.html", "content");
+    
+    await generarDiv("components","fila","cargarContenidoDesdeURL", "./components/fila.html", "content");
     await cargarContenidoDesdeURL('./components/fila.html','fila'+i);   
 
   }
@@ -71,11 +71,7 @@ async function init(){
   /*
   descripcion: llamo al init() para que se ejecute
   */
-  document.addEventListener('DOMContentLoaded', function() {
-    // Aquí puedes agregar el código que deseas ejecutar cuando la página se haya cargado completamente
-    console.log('La página ha sido cargada');
-    init(); 
-  });
+  init(); 
 
   /*
   descripcion: Esta función se encarga de buscar lo que hay en una URL determinada y cargar su contenido
@@ -84,40 +80,17 @@ async function init(){
     url: (string) Dirección donde está el contenido que quiero cargar. ejemplo: components/fila.html
     content: (string) id del div en donde quiero cargar el contenido que fui a buscar
   */
-  async function cargarContenidoDesdeURL(url,content=0) {
-    if(content==0 || content==undefined|| content=='undefined'){
-      content = obtenerIdPorClase("seleccionada");
-    }
-    var contentAux=0;
-    if(Array.isArray(content)){
-      contentAux= content;
-      content = contentAux[0];
-    }
+  async function cargarContenidoDesdeURL(url,content) {
     var xhr = new XMLHttpRequest();
     await xhr.open("GET", url, true);
     xhr.onreadystatechange = await function() {
       if (xhr.readyState === 4 && xhr.status === 200) {
         var contenido = xhr.responseText;
-        var regex = /id="([^"]+)"/g;
-        var match;
-        while ((match = regex.exec(contenido)) !== null) {
-          var idOriginal = match[1];
-          var nuevoIdCompleto = idOriginal + i;
-          contenido = contenido.replace(match[0], 'id="' + nuevoIdCompleto + '"');
-          i++;
-        }
         var contentDiv = document.getElementById(content);
         contentDiv.insertAdjacentHTML("beforeend", contenido);
       }
     };
     await xhr.send();
-    if(Array.isArray(contentAux)){
-        for(j=1 ; j<contentAux.length ; j++){
-          cargarContenidoDesdeURL(url,contentAux[j]);
-        }
-        return;
-    }
-
     await setTimeout(agregarEventosColumnas,1000);
     await agregarEventosColumnas();
   }
@@ -260,33 +233,4 @@ function combinarColumnas() {
       columna.className = nuevasClases.join(' ');
     }
   });
-}
-
-
-
-
-
-
-
-/*
-Descripcion: obtiene el id de un div en cuya clase contenga una clase pasada por parametro. Si es mas 
-de un div  devolver un arreglo con los id, sino devolver el que es, sino existe que salte una alerta 
-diciendo que debe seleccionar algun casillero. La idea de esta funcion fue que pudiera buscar el
-casillero seleccionado para meter el componente que se desee.
-parametros:
-  clase: (string) clase pasada por parametro para que devuelva el div.
-*/
-function obtenerIdPorClase(clase) {
-  var elementos = Array.from(document.querySelectorAll('div.' + clase));
-  var ids = elementos.map(function(elemento) {
-    return elemento.id;
-  });
-
-  if (ids.length === 0) {
-    alert('Debe seleccionar algún casillero.');
-  } else if (ids.length === 1) {
-    return ids[0];
-  } else {
-    return ids;
-  }
 }
