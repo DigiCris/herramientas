@@ -1,4 +1,8 @@
 /*
+Author: Cristian Marchese
+Date: 12/01/2024
+*/
+/*
 Intención del trabajo: Un WYSIWYG básico usando bootstrap
 1) Tener un menú generado con init() en la cual tengamos modelos de bootstrap
 2) Los componentes pueden ser incrementados agregando el componente a la carpeta e inicializandolos en init
@@ -290,3 +294,146 @@ function obtenerIdPorClase(clase) {
     return ids;
   }
 }
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// Date: 13/01/2024
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var estilos = {}; // Objeto para almacenar los estilos y su estado
+var estilosAnteriores = []; // Array para almacenar los estilos anteriores
+var estilosPosteriores = []; // Array para almacenar los estilos posteriores
+
+function handleDoubleClick(event) {
+  event.stopPropagation(); // evita que se siga propagando y que se llame muchas veces a este handle con un doble click solo
+  var id = event.target.id; // obtiene el id de quien lo llamo
+  change(id); // llama a la función que modificará su css
+}
+
+/*
+Descripción: Función que recibe un id, le saca la parte numerica para saber que tipo es, realiza un switch
+             case para identificarlo y pide que agreguemos el css. El mismo tiene que ser agregado solo
+             las sentencias. por ejemplo para centrar datos en una columna (col) podríamos escribirlo
+             usando flex de la siguiente forma: display:flex; flex-wrap:wrap; justify-content:center; 
+             align-items:center; align-content:center;. El estilo generado lo carga en la página en
+             una etiqueta style con un id="my-styles", lo cual servirá luego para exportarlo. También
+             guarda los estilos anteriores y posteriores para luego poder irlos recorriendo y aplicar
+             un undo y redo. También debemos resaltar que si el Id ya existía lo sobreescribe, sino
+             lo crea.
+Parametros:
+  id: (string) Es el id del elemento al cual le queremos modificar el css.
+  prompt: (string) El usuario le ingresa a mano el css que desea. ejemplo: font-size: 1px;.
+*/
+function change(id) {
+  var tipo = id.replace(/\d+/g, '');
+  var estilo = '';
+
+  switch (tipo) {
+    case 'button':
+      estilo = prompt('Ingrese el texto en formato CSS para el botón:');
+      break;
+    case 'col':
+      estilo = prompt('Ingrese el texto en formato CSS para la fila:');
+      break;
+    default:
+      console.log('Tipo desconocido');
+      break;
+  }
+
+  if (estilo.trim() !== '') {
+    estilosAnteriores.push({ id: id, estilo: estilos[id] }); // Guardar el estilo anterior
+
+    estilos[id] = estilo; // Actualizar el objeto de estilos
+
+    var styleElement = document.getElementById('my-styles');
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'my-styles';
+      document.head.appendChild(styleElement);
+    }
+
+    var contenidoEstilos = '';
+    for (var key in estilos) {
+      if (estilos.hasOwnProperty(key)) {
+        contenidoEstilos += '#' + key + ' { ' + estilos[key] + ' }\n';
+      }
+    }
+
+    styleElement.innerHTML = contenidoEstilos;
+
+    // Limpiar el array de estilos posteriores
+    estilosPosteriores = [];
+  }
+}
+
+/*
+Descripción: Función que se ejecuta cuando se preciona el botón de deshacer y recorre los estilos
+             anteriores realizando los cambiós sobre <style id="my-styles"> para volver a la versión
+             anterior. En caso de que ya no haya más para un componente lo deja vació volviendo al
+             estado inicial
+*/
+function undo() {
+  if (estilosAnteriores.length > 0) {
+    var ultimoEstilo = estilosAnteriores.pop();
+    var id = ultimoEstilo.id;
+    var estilo = ultimoEstilo.estilo;
+
+    estilosPosteriores.push({ id: id, estilo: estilos[id] }); // Guardar el estilo actual en estilos posteriores
+
+    estilos[id] = estilo; // Restaurar el estilo anterior
+
+    var styleElement = document.getElementById('my-styles');
+    if (styleElement) {
+      var contenidoEstilos = '';
+      for (var key in estilos) {
+        if (estilos.hasOwnProperty(key)) {
+          contenidoEstilos += '#' + key + ' { ' + estilos[key] + ' }\n';
+        }
+      }
+
+      styleElement.innerHTML = contenidoEstilos;
+    }
+  }
+}
+
+/*
+Descripción: Función que se ejecuta cuando se preciona el botón de rehacer y recorre los estilos
+             posteriores realizando los cambiós sobre <style id="my-styles"> para volver a la versión
+             posterior.
+*/
+function redo() {
+  if (estilosPosteriores.length > 0) {
+    var siguienteEstilo = estilosPosteriores.pop();
+    var id = siguienteEstilo.id;
+    var estilo = siguienteEstilo.estilo;
+
+    estilosAnteriores.push({ id: id, estilo: estilos[id] }); // Guardar el estilo actual en estilos anteriores
+
+    estilos[id] = estilo; // Restaurar el estilo siguiente
+
+    var styleElement = document.getElementById('my-styles');
+    if (styleElement) {
+      var contenidoEstilos = '';
+      for (var key in estilos) {
+        if (estilos.hasOwnProperty(key)) {
+          contenidoEstilos += '#' + key + ' { ' + estilos[key] + ' }\n';
+        }
+      }
+
+      styleElement.innerHTML = contenidoEstilos;
+    }
+  }
+}
+
+/*
+Descripción: Agrega todos los elementos para que escuchen los doble clicks
+*/
+var elementos = document.querySelectorAll('*');
+elementos.forEach(function(elemento) {
+  elemento.addEventListener('dblclick', handleDoubleClick);
+});
