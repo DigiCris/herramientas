@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Formulario de Estilos para Botones</title>
+</head>
+<body>
+  <h2>Formulario de Estilos para Botones</h2>
+  <form>
+    <label for="CSS-id">id:</label>
+    <input type="text" class="CSS-id" name="CSS-id">
+    <br>
+    <label for="CSS-font-size">font-size:</label>
+    <input type="text" class="CSS-font-size" name="CSS-font-size">
+    <br>
+
+    <input type="button" value="Guardar" class="CSS-guardar" onclick="
+    /*Acá rescato los ID, cargo los estilos y envío a la funcion change() que hará el cambio de estilos*/
+        id2change = document.getElementsByClassName('CSS-id')[0].value;
+        alert(id2change); // acá tengo guardado el id
+        var estilo='';
+        estilo += 'font-size: ' + document.getElementsByClassName('CSS-font-size')[0].value;// agrego font-size
+        change(id2change,estilo);
+    ">
+  </form>
+</body>
+</html>
+
+
+
+<!-- 
+5) acomodar bien esto en el html para que no moleste.
+6) Que cuando se cargue el form lo haga con los valores que ya tiene el estilo
+-->

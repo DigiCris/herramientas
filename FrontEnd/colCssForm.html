@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Formulario de Estilos para Filas</title>
+</head>
+<body>
+  <h2>Formulario de Estilos para Filas</h2>
+  <form>
+    <label for="CSS-id">id:</label>
+    <input type="text" class="CSS-id" name="CSS-id">
+    <br>
+
+    <label for="display">Display:</label>
+    <input type="text" class="CSS-display" name="display">
+    <br>
+    <label for="flex-wrap">Flex Wrap:</label>
+    <input type="text" class="CSS-flex-wrap" name="flex-wrap">
+    <br>
+    <label for="justify-content">Justify Content:</label>
+    <input type="text" class="CSS-justify-content" name="justify-content">
+    <br>
+    <label for="align-items">Align Items:</label>
+    <input type="text" class="CSS-align-items" name="align-items">
+    <br>
+    <label for="align-content">Align Content:</label>
+    <input type="text" class="CSS-align-content" name="align-content">
+    <br>
+
+    <input type="button" value="Guardar" class="CSS-guardar" onclick="
+    /*Acá rescato los ID, cargo los estilos y envío a la funcion change() que hará el cambio de estilos*/
+        id2change = document.getElementsByClassName('CSS-id')[0].value;
+        alert(id2change); // acá tengo guardado el id
+        var estilo='';
+        estilo += 'display: ' + document.getElementsByClassName('CSS-display')[0].value;// agrego font-size
+        estilo += 'flex-wrap: ' + document.getElementsByClassName('CSS-flex-wrap')[0].value;
+        estilo += 'justify-content: ' + document.getElementsByClassName('CSS-justify-content')[0].value;
+        estilo += 'align-items: ' + document.getElementsByClassName('CSS-align-items')[0].value;
+        estilo += 'align-content: ' + document.getElementsByClassName('CSS-align-content')[0].value;
+        change(id2change,estilo);
+    ">
+
+  </form>
+</body>
+</html>

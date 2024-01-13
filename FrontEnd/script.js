@@ -87,44 +87,50 @@ async function init(){
   Parametros:
     url: (string) Dirección donde está el contenido que quiero cargar. ejemplo: components/fila.html
     content: (string) id del div en donde quiero cargar el contenido que fui a buscar
+    mode: (string) puede ser "a" o "w". a agrega, w sobreescribe el div. Agregar es por defecto si no
+          se especifica. (modificado 13/01/2024)
   */
-  async function cargarContenidoDesdeURL(url,content=0) {
-    if(content==0 || content==undefined|| content=='undefined'){
-      content = obtenerIdPorClase("seleccionada");
-    }
-    var contentAux=0;
-    if(Array.isArray(content)){
-      contentAux= content;
-      content = contentAux[0];
-    }
-    var xhr = new XMLHttpRequest();
-    await xhr.open("GET", url, true);
-    xhr.onreadystatechange = await function() {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        var contenido = xhr.responseText;
-        var regex = /id="([^"]+)"/g;
-        var match;
-        while ((match = regex.exec(contenido)) !== null) {
-          var idOriginal = match[1];
-          var nuevoIdCompleto = idOriginal + i;
-          contenido = contenido.replace(match[0], 'id="' + nuevoIdCompleto + '"');
-          i++;
-        }
-        var contentDiv = document.getElementById(content);
-        contentDiv.insertAdjacentHTML("beforeend", contenido);
+    async function cargarContenidoDesdeURL(url, content = 0, mode = 'a') {
+      if (content == 0 || content == undefined || content == 'undefined') {
+        content = obtenerIdPorClase("seleccionada");
       }
-    };
-    await xhr.send();
-    if(Array.isArray(contentAux)){
-        for(j=1 ; j<contentAux.length ; j++){
-          cargarContenidoDesdeURL(url,contentAux[j]);
+      var contentAux = 0;
+      if (Array.isArray(content)) {
+        contentAux = content;
+        content = contentAux[0];
+      }
+      var xhr = new XMLHttpRequest();
+      await xhr.open("GET", url, true);
+      xhr.onreadystatechange = await function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var contenido = xhr.responseText;
+          var regex = /id="([^"]+)"/g;
+          var match;
+          while ((match = regex.exec(contenido)) !== null) {
+            var idOriginal = match[1];
+            var nuevoIdCompleto = idOriginal + i;
+            contenido = contenido.replace(match[0], 'id="' + nuevoIdCompleto + '"');
+            i++;
+          }
+          var contentDiv = document.getElementById(content);
+          if (mode === 'w') {
+            contentDiv.innerHTML = contenido; // Sobrescribir el contenido existente
+          } else {
+            contentDiv.insertAdjacentHTML("beforeend", contenido); // Agregar el contenido al final
+          }
+        }
+      };
+      await xhr.send();
+      if (Array.isArray(contentAux)) {
+        for (j = 1; j < contentAux.length; j++) {
+          cargarContenidoDesdeURL(url, contentAux[j], mode);
         }
         return;
+      }
+    
+      await setTimeout(agregarEventosColumnas, 1000);
+      await agregarEventosColumnas();
     }
-
-    await setTimeout(agregarEventosColumnas,1000);
-    await agregarEventosColumnas();
-  }
 
 var i=0;
 /*
@@ -308,47 +314,114 @@ function obtenerIdPorClase(clase) {
 var estilos = {}; // Objeto para almacenar los estilos y su estado
 var estilosAnteriores = []; // Array para almacenar los estilos anteriores
 var estilosPosteriores = []; // Array para almacenar los estilos posteriores
+var cssForm = ""; // indica cual es el elemento al cual se lee está modificando el css
 
+/*
+descripción: Función que maneja el doble click de los componentes para cambiar su css. Primero obtiene
+             el id de quien lo llamó y se lo manda a addToChangeCss, la cual verificará si el formulario
+             cargado es el correcto o si debe cambiarlo y luego agregará el id del elemento a cambiar.
+*/
 function handleDoubleClick(event) {
   event.stopPropagation(); // evita que se siga propagando y que se llame muchas veces a este handle con un doble click solo
   var id = event.target.id; // obtiene el id de quien lo llamo
-  change(id); // llama a la función que modificará su css
+  addIdToChangeCss(id);
+}
+
+
+/*
+var idAddIdToChangeCss: En una variable global que contiene el id de lo clickeado así cuando se hace
+                        el llamado recursivo para saber si el formulario está listo no tengo que estarle
+                        mandando quien lo llamo y no colmo el stack.
+Descripción addToChangeCss: verificará si el formulario cargado es el correcto o si debe cambiarlo y luego
+            agregará el id del elemento a cambiar. Para eso compara el tipo actual del elemento que hizo
+            doble click pasado como parametro desde el handler del evento y sacado la parte numerica (para
+            obtener el tipo. Ejemplo: button145 es tipo button). Luego compara con cssForm que es una
+            variable global que tiene el ultimo form cargado, si es del mismo tipo lo agrega en el campo
+            correspondiente al CSS-id, si es diferente, hace el cambio de form y también lo agrega pero
+            lo hace a travez de la función verificarExistencia()
+Parametros:
+              id: (string) el id del componente al cual quiero cambiarle el css
+*/
+var idAddIdToChangeCss;
+function addIdToChangeCss(id){
+  var tipo = id.replace(/\d+/g, '');
+  if(tipo==cssForm){// agrego
+    document.getElementsByClassName("CSS-id")[0].value += (", "+id);
+  } else{ //cambio
+    changeForm(id); // llama a la función que modificará el formulario para modificar el css
+    idAddIdToChangeCss = id;
+    verificarExistencia(id);
+  }
+}
+
+/*
+descripción: Función recursiva que verifica la existencia del campo CSS-id que es donde se cargan los id
+             de los elementos que van a ser cambiado sus css. Mientras no aparece se sigue llamando cada
+             250ms sin hacer nada, cuando aparece en dicho campo se carga el id del elemento que lo llamo
+             que está cargado globalmente en idAddIdToChangeCss para evitar desbordamiento de pila.
+Nota: CSS-id es el nombre que tiene que tener la clase de cualquier formulario de css donde esté los id
+      a cambiar para que funcione correctamente todo.
+*/
+function verificarExistencia() {
+  const elementoDeseado = document.getElementsByClassName("CSS-id")[0];
+  if (elementoDeseado) {
+    document.getElementsByClassName("CSS-id")[0].value = idAddIdToChangeCss;
+  } else {
+    setTimeout(verificarExistencia, 250); // Intentar de nuevo después de 100ms
+  }
 }
 
 /*
 Descripción: Función que recibe un id, le saca la parte numerica para saber que tipo es, realiza un switch
-             case para identificarlo y pide que agreguemos el css. El mismo tiene que ser agregado solo
+             case para identificarlo y carga el formulario de cada componente dentro de formulario-container.
+Parametros:
+  id: (string) Es el id del elemento al cual le queremos modificar el css.
+*/
+function changeForm(id) {
+  var tipo = id.replace(/\d+/g, '');
+  switch (tipo) {
+    case 'button':
+      cssForm = 'button';
+      //estilo = prompt('Ingrese el texto en formato CSS para el botón:');
+      cargarContenidoDesdeURL('./buttonCssForm.html','formulario-container','w');
+      break;
+    case 'col':
+      cssForm = 'col';
+      //estilo = prompt('Ingrese el texto en formato CSS para la fila:');
+      cargarContenidoDesdeURL('./colCssForm.html','formulario-container','w');
+      break;
+    default:
+      console.log('Tipo desconocido');
+      break;
+  }
+}
+
+/*
+Descripción: Función que recibe unoo mas id, y el estilo css el cual tiene que ser agregado solo
              las sentencias. por ejemplo para centrar datos en una columna (col) podríamos escribirlo
              usando flex de la siguiente forma: display:flex; flex-wrap:wrap; justify-content:center; 
              align-items:center; align-content:center;. El estilo generado lo carga en la página en
              una etiqueta style con un id="my-styles", lo cual servirá luego para exportarlo. También
              guarda los estilos anteriores y posteriores para luego poder irlos recorriendo y aplicar
              un undo y redo. También debemos resaltar que si el Id ya existía lo sobreescribe, sino
-             lo crea.
+             lo crea. A pesar de recibir muchos id los guarda de a uno para luego poder deshacer o
+             rehacer de a 1.s
 Parametros:
-  id: (string) Es el id del elemento al cual le queremos modificar el css.
-  prompt: (string) El usuario le ingresa a mano el css que desea. ejemplo: font-size: 1px;.
+  id: (string) Es el id del elemento al cual le queremos modificar el css. Si recibe varios, separarlo
+      por "," (comas)
+  estilo: (string) Estilo por el que desea cambiarle al id correspondiente. ejemplo: font-size: 1px;.
 */
-function change(id) {
-  var tipo = id.replace(/\d+/g, '');
-  var estilo = '';
-
-  switch (tipo) {
-    case 'button':
-      estilo = prompt('Ingrese el texto en formato CSS para el botón:');
-      break;
-    case 'col':
-      estilo = prompt('Ingrese el texto en formato CSS para la fila:');
-      break;
-    default:
-      console.log('Tipo desconocido');
-      break;
-  }
+function change(ids, estilo) {
+  var idArray = ids.split(',').map(function(id) {
+    return id.trim();
+  });
 
   if (estilo.trim() !== '') {
-    estilosAnteriores.push({ id: id, estilo: estilos[id] }); // Guardar el estilo anterior
+    idArray.forEach(function(id) {
+      estilosAnteriores.push({ id: id, estilo: estilos[id] }); // Guardar el estilo anterior
 
-    estilos[id] = estilo; // Actualizar el objeto de estilos
+      estilos[id] = estilo; // Actualizar el objeto de estilos
+    });
 
     var styleElement = document.getElementById('my-styles');
     if (!styleElement) {
