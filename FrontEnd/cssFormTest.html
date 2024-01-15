@@ -1,0 +1,193 @@
+<!-- possibleCssChanges => Aca tengo los valores css posibles a escribir
+cssVector => Acá tengo los valores css guardados
+guardarCss() => cuando llamo a esta funcion guardo los valores que están en el formulario en cssVector
+-->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <title>Formulario CSS</title>
+  <style>
+    .form-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      flex-basis: 150px;
+      margin-right: 10px;
+    }
+
+    .form-group .form-control {
+      flex-basis: 200px;
+    }
+
+    .form-group .btn {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container mt-5">
+    <h1>Formulario CSS</h1>
+    <div id="accordion">
+      <div class="card">
+        <div class="card-header" id="headingOne">
+          <h5 class="mb-0">
+            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true"
+              aria-controls="collapseOne">
+              Configuración CSS
+            </button>
+          </h5>
+        </div>
+
+        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+          <div class="card-body">
+            <form id="cssForm">
+              <div id="formFields">
+              </div>
+              <button type="button" class="btn btn-primary" onclick="agregarCampo()">Agregar Campo</button>
+              <button type="button" class="btn btn-success" onclick="guardarCss()">Guardar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var possibleCssChanges = {
+      "accent-color": "auto",
+      "align-content": "normal",
+      "align-items": "flex-start",
+      "align-self": "auto",
+      "alignment-baseline": "auto"
+      // ...
+    };
+
+    var actualCss = {
+      "accent-color": "red",
+      "align-content": "center",
+      "align-items": "flex-end"
+      // ...
+    };
+
+    function inicializarFormulario() {
+      var formFields = document.getElementById("formFields");
+
+      for (var key in actualCss) {
+        agregarCampo(key, actualCss[key]);
+      }
+    }
+
+    function agregarCampo(property = "", value = "") {
+      var formFields = document.getElementById("formFields");
+      var formGroups = formFields.getElementsByClassName("form-group");
+
+      var availableOptions = [];
+
+      // Obtener las opciones disponibles
+      for (var key in possibleCssChanges) {
+        var isOptionSelected = false;
+        for (var i = 0; i < formGroups.length; i++) {
+          var existingSelect = formGroups[i].querySelector("select");
+          if (existingSelect && existingSelect.value === key) {
+            isOptionSelected = true;
+            break;
+          }
+        }
+        if (!isOptionSelected) {
+          availableOptions.push(key);
+        }
+      }
+
+      // Verificar si no hay opciones disponibles
+      if (availableOptions.length === 0) {
+        alert("No more fields can be added.");
+        return;
+      }
+
+      var formGroup = document.createElement("div");
+      formGroup.className = "form-group";
+
+      var label = document.createElement("label");
+      label.textContent = "Propiedad:";
+
+      var select = document.createElement("select");
+      select.className = "form-control";
+
+      for (var i = 0; i < availableOptions.length; i++) {
+        var option = document.createElement("option");
+        option.value = availableOptions[i];
+        option.textContent = availableOptions[i];
+
+        if (availableOptions[i] === property) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      }
+
+      var input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-control";
+      input.value = value;
+
+      var deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "btn btn-danger";
+      deleteButton.textContent = "Eliminar";
+      deleteButton.onclick = function () {
+       eliminarCampo(formGroup);
+      };
+
+      formGroup.appendChild(label);
+      formGroup.appendChild(select);
+      formGroup.appendChild(input);
+      formGroup.appendChild(deleteButton);
+      formFields.appendChild(formGroup);
+    }
+
+    function eliminarCampo(formGroup) {
+      formGroup.remove();
+    }
+
+    function guardarCss() {
+      var cssVector = [];
+
+      var formGroups = document.querySelectorAll("#formFields .form-group");
+
+      formGroups.forEach(function (formGroup) {
+        var select = formGroup.querySelector("select");
+        var input = formGroup.querySelector("input");
+
+        var property = select.value;
+        var value = input.value;
+
+        if (property && value) {
+          var css = {};
+          css[property] = value;
+          cssVector.push(css);
+        }
+      });
+
+      // Llamar a la función GuardarCss(cssVector)
+      GuardarCss(cssVector);
+    }
+
+    function GuardarCss(cssVector) {
+      console.log(cssVector);
+    }
+
+    inicializarFormulario();
+  </script>
+</body>
+
+</html>

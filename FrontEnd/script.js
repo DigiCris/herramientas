@@ -48,16 +48,18 @@ de ese div que generó con el simple hecho de que podamos saber que estamos clic
 async function init(){
     // ID donde guardarlo,          ID para llamarlo, funcion,                   arg1,              arg2
     await generarDiv("button1","button1","cargarContenidoDesdeURL", "./components/button1.html");
-    await cargarContenidoDesdeURL('./components/button1.html','button1'+i);    
+    await cargarContenidoDesdeURL('./components/button1.html','button1'+i_id);    
 
     await generarDiv("button2","button2","cargarContenidoDesdeURL", "./components/button2.html");
-    await cargarContenidoDesdeURL('./components/button2.html','button2'+i);   
+    await cargarContenidoDesdeURL('./components/button2.html','button2'+i_id);   
 
     await generarDiv("button3","button3","cargarContenidoDesdeURL", "./components/button3.html");
-    await cargarContenidoDesdeURL('./components/button3.html','button3'+i);   
+    await cargarContenidoDesdeURL('./components/button3.html','button3'+i_id);   
 
     await generarDiv("layout","fila","cargarContenidoDesdeURL", "./components/fila.html", "content");
-    await cargarContenidoDesdeURL('./components/fila.html','fila'+i);   
+    await cargarContenidoDesdeURL('./components/fila.html','fila'+i_id);   
+
+    i_id++;
 
   }
 
@@ -108,9 +110,9 @@ async function init(){
           var match;
           while ((match = regex.exec(contenido)) !== null) {
             var idOriginal = match[1];
-            var nuevoIdCompleto = idOriginal + i;
+            var nuevoIdCompleto = idOriginal + i_id;
             contenido = contenido.replace(match[0], 'id="' + nuevoIdCompleto + '"');
-            i++;
+            i_id++;
           }
           var contentDiv = document.getElementById(content);
           if (mode === 'w') {
@@ -132,7 +134,7 @@ async function init(){
       await agregarEventosColumnas();
     }
 
-var i=0;
+var i_id=0;
 /*
 Descripcion: Esta función se encarga de generar los divs con la función onClick que hará que cuando se
 clickee en ese div se realice una función determinada pasada como functionName y que recibe 2 params.
@@ -150,10 +152,10 @@ Parametros:
 */
 function generarDiv(idContainer, idItem, functionName, url, targetId) {
   //alert(idItem+i)
-  i++;
+  i_id++;
   var div = document.createElement('div');
-  div.className = idItem+i;
-  div.id = idItem+i;
+  div.className = idItem+i_id;
+  div.id = idItem+i_id;
   div.setAttribute('onclick', ""+functionName+"('"+url+"', '"+targetId+"')");
 
   var targetDiv = document.getElementById(idContainer);
@@ -343,14 +345,14 @@ Parametros:
               id: (string) el id del componente al cual quiero cambiarle el css
 */
 var idAddIdToChangeCss;
-function addIdToChangeCss(id){
+async function addIdToChangeCss(id){
   var tipo = id.replace(/\d+/g, '');
   if(tipo==cssForm){// agrego
     document.getElementsByClassName("CSS-id")[0].value += (", "+id);
   } else{ //cambio
-    changeForm(id); // llama a la función que modificará el formulario para modificar el css
+    await changeForm(id); // llama a la función que modificará el formulario para modificar el css
     idAddIdToChangeCss = id;
-    verificarExistencia(id);
+    setTimeout(verificarExistencia, 250); // Intentar de nuevo después de 100ms
   }
 }
 
@@ -366,6 +368,7 @@ function verificarExistencia() {
   const elementoDeseado = document.getElementsByClassName("CSS-id")[0];
   if (elementoDeseado) {
     document.getElementsByClassName("CSS-id")[0].value = idAddIdToChangeCss;
+    getOption(idAddIdToChangeCss); // agregado 14/1/2024 para cargar options del select para cambiar html
   } else {
     setTimeout(verificarExistencia, 250); // Intentar de nuevo después de 100ms
   }
@@ -510,3 +513,281 @@ var elementos = document.querySelectorAll('*');
 elementos.forEach(function(elemento) {
   elemento.addEventListener('dblclick', handleDoubleClick);
 });
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// Date: 14/01/2024
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+var cambiosHTML = [];
+var indiceCambiosHTML = -1;
+
+function changeHTML(ids, contentHTML) {
+  var idArray = ids.split(",");
+
+  for (var i = 0; i < idArray.length; i++) {
+    var id = idArray[i].trim();
+    var elemento = document.getElementById(id);
+
+    if (elemento) {
+      var contenidoActual = elemento.innerHTML;
+
+      if (indiceCambiosHTML < cambiosHTML.length - 1) {
+        // Eliminar cambios posteriores al índice actual
+        cambiosHTML.splice(indiceCambiosHTML + 1);
+      }
+
+      var cambioExistente = cambiosHTML.find(function (cambio) {
+        return cambio.id === id;
+      });
+
+      if (!cambioExistente) {
+        // Es el primer cambio para este ID, guardar el contenido actual
+        cambiosHTML.push({ id: id, contenido: contenidoActual });
+        indiceCambiosHTML++;
+      }
+
+      cambiosHTML.push({ id: id, contenido: contentHTML });
+      indiceCambiosHTML++;
+
+      elemento.innerHTML = contentHTML;
+    }
+  }
+}
+
+function undoHTML() {
+  if (indiceCambiosHTML >= 0) {
+    var cambioAnterior = cambiosHTML[indiceCambiosHTML - 1];
+    var elemento = document.getElementById(cambioAnterior.id);
+
+    if (elemento) {
+      elemento.innerHTML = cambioAnterior.contenido;
+      indiceCambiosHTML--;
+    }
+  }
+}
+
+function redoHTML() {
+  if (indiceCambiosHTML < cambiosHTML.length - 1) {
+    var cambioSiguiente = cambiosHTML[indiceCambiosHTML + 1];
+    var elemento = document.getElementById(cambioSiguiente.id);
+
+    if (elemento) {
+      elemento.innerHTML = cambioSiguiente.contenido;
+      indiceCambiosHTML++;
+    }
+  }
+}
+
+*/
+var cambiosHTML = [];
+var indiceCambiosHTML = -1;
+var campoActual = ""; // Variable para almacenar el campo actual
+
+function changeHTML(ids, campo, content) {
+  alert(ids+' , '+campo+' , '+content);
+  var idArray = ids.split(",");
+
+  for (var j = 0; j < idArray.length; j++) {
+    var id = idArray[j].trim();
+    var elemento = document.getElementById(id);
+
+    if (elemento) {
+      var contenidoActual = elemento[campo];
+
+      if (indiceCambiosHTML < cambiosHTML.length - 1) {
+        // Eliminar cambios posteriores al índice actual
+        cambiosHTML.splice(indiceCambiosHTML + 1);
+      }
+
+      var cambioExistente = cambiosHTML.find(function (cambio) {
+        return cambio.id === id && cambio.campo === campo;
+      });
+
+      if (!cambioExistente) {
+        // Es el primer cambio para este ID y campo, guardar el contenido actual
+        cambiosHTML.push({ id: id, campo: campo, contenido: contenidoActual });
+        indiceCambiosHTML++;
+      }
+
+      cambiosHTML.push({ id: id, campo: campo, contenido: content });
+      indiceCambiosHTML++;
+
+      campoActual = campo; // Guardar el campo actual para deshacer/rehacer
+
+      elemento[campo] = content;
+    }
+  }
+}
+
+function undoHTML() {
+  if (indiceCambiosHTML >= 0) {
+    var cambioAnterior = cambiosHTML[indiceCambiosHTML - 1];
+    var elemento = document.getElementById(cambioAnterior.id);
+
+    if (elemento && cambioAnterior.campo === campoActual) {
+      elemento[cambioAnterior.campo] = cambioAnterior.contenido;
+      indiceCambiosHTML--;
+    }
+  }
+}
+
+function redoHTML() {
+  if (indiceCambiosHTML < cambiosHTML.length - 1) {
+    var cambioSiguiente = cambiosHTML[indiceCambiosHTML + 1];
+    var elemento = document.getElementById(cambioSiguiente.id);
+
+    if (elemento && cambioSiguiente.campo === campoActual) {
+      elemento[cambioSiguiente.campo] = cambioSiguiente.contenido;
+      indiceCambiosHTML++;
+    }
+  }
+}
+
+
+
+
+function generarHTML() {
+  var contenido = document.getElementById("content").innerHTML;
+  var estilos = document.getElementById("my-styles").innerHTML; //start-style
+  var estilos_start = document.getElementById("start-style").innerHTML;
+  var seoTitulo = prompt("Ingrese el título para SEO:");
+  var seoDescripcion = prompt("Ingrese la descripción para SEO:");
+
+  var htmlCompilado = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="description" content="${seoDescripcion}">
+      <title>${seoTitulo}</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+      <script src="https://polyfill.io/v3/polyfill.min.js?features=fetch"></script>
+      <style>
+        ${estilos_start}
+        ${estilos}
+      </style>
+    </head>
+    <body>
+      ${contenido}
+    </body>
+    </html>
+  `;
+
+  var enlaceDescarga = document.createElement("a");
+  enlaceDescarga.href = "data:text/html;charset=utf-8," + encodeURIComponent(htmlCompilado);
+  enlaceDescarga.download = "index.html";
+  enlaceDescarga.style.display = "none";
+
+  document.body.appendChild(enlaceDescarga);
+  enlaceDescarga.click();
+  document.body.removeChild(enlaceDescarga);
+}
+
+document.addEventListener("keydown", function(event) {
+  if (event.ctrlKey && event.key === "z") {
+    // Realizar la acción deseada al presionar "Control + Z"
+    var boton = document.getElementById("miBoton");
+    if (boton) {
+      undo();
+      undoHTML();
+    }
+  }
+  if (event.ctrlKey && event.key === "y") {
+    // Realizar la acción deseada al presionar "Control + Z"
+    var boton = document.getElementById("miBoton");
+    if (boton) {
+      redo();
+      redoHTML();
+    }
+  }
+});
+
+
+
+var prop;
+var propJs;
+function getOption(id){
+  var miElemento = document.getElementById(id);
+  //alert("Elemento obtenido: " + miElemento);
+
+  var propiedades = obtenerPropiedadesUtiles(miElemento);
+  prop = propiedades;
+  propJs = JSON.stringify(propiedades);
+  //alert("Propiedades obtenidas: " + JSON.stringify(propiedades));
+
+  console.log(propiedades);
+  crearSelectConOpciones(prop);
+}
+
+
+function obtenerTodasLasPropiedades(elemento) {
+  var todasLasPropiedades = {};
+
+  for (var propiedad in elemento) {
+    if (typeof elemento[propiedad] !== "function") {
+      todasLasPropiedades[propiedad] = elemento[propiedad];
+    }
+  }
+
+  return todasLasPropiedades;
+}
+
+
+
+function obtenerPropiedadesUtiles(elemento) {
+  var propiedadesUtiles = {};
+
+  for (var propiedad in elemento) {
+    if (typeof elemento[propiedad] !== "function" && aceptaPropiedad(elemento, propiedad)) {
+      propiedadesUtiles[propiedad] = elemento[propiedad];
+    }
+  }
+
+  return propiedadesUtiles;
+}
+
+function aceptaPropiedad(elemento, propiedad) {
+  var descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(elemento), propiedad);
+
+  if (descriptor && descriptor.set) {
+    return true;
+  }
+
+  return false;
+}
+
+function crearSelectConOpciones(objeto) {
+  var select = document.getElementsByClassName('html-field')[0];
+
+  for (var key in objeto) {
+    if (objeto.hasOwnProperty(key)) {
+      var option = document.createElement('option');
+      option.value = key;
+      option.text = key;
+      select.appendChild(option);
+    }
+  }
+}
+
+
+/*
+var miElemento = document.getElementById("button35");
+alert("Elemento obtenido: " + miElemento);
+
+var propiedades = obtenerTodasLasPropiedades(miElemento);
+alert("Propiedades obtenidas: " + JSON.stringify(propiedades));
+
+console.log(propiedades);
+*/
+
+//Corregi bug que cuando se hacía un cambio de form de estilo no cargaba el primer id
+// hice que se pueda cambiar el html de un boton mandando el campo que se quiere cambiar del elemento seleccionado y el contenido
